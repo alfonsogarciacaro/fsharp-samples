@@ -32,6 +32,12 @@ Target "chapter-10/MailboxProcessor" (fun _ ->
     runExe projectDir
 )
 
+Target "chapter-10/Orleankka" (fun _ ->
+    let projectDir = "chapter-10" </> "Orleankka"
+    buildDebug projectDir
+    runExe projectDir
+)
+
 Target "Help" (fun _ ->
     printfn "Pass the chapter and the name of the project to run. Example:"
     printfn "build chapter-10/MailboxProcessor"    

@@ -1,0 +1,48 @@
+module Orleankka
+
+open System
+open System.Reflection
+
+open Orleankka
+open Orleankka.FSharp
+
+type Message = 
+   | Greet of string
+   | Hi
+   interface ActorMessage<Greeter>
+
+and Greeter() = 
+   inherit Actor<Message>()   
+
+   override this.Receive message = task {
+      match message with
+      | Greet who -> printfn "Hello %s" who
+                     return response()
+      
+      | Hi        -> printfn "Hello from F#!"
+                     return response()           
+   }
+
+[<EntryPoint>]
+let main argv = 
+
+    printfn "Running demo. Booting cluster might take some time ...\n"
+
+    use system = ActorSystem.Configure()
+                            .Playground()
+                            .Register(Assembly.GetExecutingAssembly())
+                            .Done()
+                  
+    let actor = system.TypedActorOf<Greeter>(Guid.NewGuid().ToString())
+
+    let job() = task {
+      do! actor <! Hi
+      do! actor <! Greet "Yevhen"
+      do! actor <! Greet "AntyaDev"
+      //do! actor <! true won't compile
+    }
+    
+    Task.run(job) |> ignore
+    
+    Console.ReadLine() |> ignore    
+    0
