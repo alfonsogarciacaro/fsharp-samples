@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>0b0a4bf2-9d18-440a-9ac1-656b2ee5c66b</ProjectGuid>
+    <ProjectGuid>04c066ab-46bc-4f8c-8d50-c98235534900</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Akka</RootNamespace>
-    <AssemblyName>Akka</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>Chat.Akka</RootNamespace>
+    <AssemblyName>Chat.Akka</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>Akka</Name>
+    <Name>Chat.Akka</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,7 +42,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Akka.fs" />
+    <Compile Include="Chat.Akka.fs" />
     <None Include="App.config" />
   </ItemGroup>
   <PropertyGroup>

@@ -1,10 +1,11 @@
-module Orleankka
+module Chat.Orleankka
 
 open System
 open System.Reflection
 
 open Orleankka
 open Orleankka.FSharp
+open Orleankka.Playground
 
 type Message = 
    | Greet of string
@@ -24,8 +25,7 @@ and Greeter() =
    }
 
 [<EntryPoint>]
-let main argv = 
-
+let main argv =
     printfn "Running demo. Booting cluster might take some time ...\n"
 
     use system = ActorSystem.Configure()
@@ -44,5 +44,5 @@ let main argv =
     
     Task.run(job) |> ignore
     
-    Console.ReadLine() |> ignore    
-    0
+    Console.ReadLine() |> ignore
+    0 // return an integer exit code

@@ -26,14 +26,14 @@ let buildDebug projectDir =
     MSBuildDebug buildDir "Build" [projectDir </> projectName + ".fsproj"]
     |> ignore
 
-Target "chapter-10/MailboxProcessor" (fun _ ->
-    let projectDir = "chapter-10" </> "MailboxProcessor"
+Target "chapter-10/Chat.MailboxProcessor" (fun _ ->
+    let projectDir = "chapter-10" </> "Chat.MailboxProcessor"
     buildDebug projectDir
     runExe projectDir
 )
 
-Target "chapter-10/Orleankka" (fun _ ->
-    let projectDir = "chapter-10" </> "Orleankka"
+Target "chapter-10/Chat.Akka" (fun _ ->
+    let projectDir = "chapter-10" </> "Chat.Akka"
     buildDebug projectDir
     runExe projectDir
 )
