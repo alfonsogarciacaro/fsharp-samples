@@ -1,23 +1,23 @@
-module MailboxProcessor
+module Chat.MailboxProcessor
 
 open System
 open System.Collections.Generic
 
 type Actor<'T> = MailboxProcessor<'T>
 
-type UserMsg =
+type AdminMsg =
   | Talk of author: string * message: string
-  | Enter of name: string * Actor<AdminMsg>
+  | Enter of name: string * Actor<UserMsg>
   | Leave of name: string
 
-and AdminMsg =
+and UserMsg =
   | Message of author: string * message: string
   | AllowEntry
   | Expel
 
-let admin = Actor<UserMsg>.Start(fun actor ->
+let admin = Actor<AdminMsg>.Start(fun actor ->
   // Keep the list of users in the chat room
-  let users = Dictionary<string, Actor<AdminMsg>>()
+  let users = Dictionary<string, Actor<UserMsg>>()
   // ...and use a function helper to post a message to all of them 
   let post msg = for u in users.Values do u.Post(msg)
 
@@ -55,14 +55,14 @@ type UserState = OutOfTheRoom | InTheRoom | WaitingApproval
 
 type [<RequireQualifiedAccess>] RndUserMsg =
     | RandomIntervention
-    | AdminMsg of AdminMsg
+    | UserMsg of UserMsg
 
 let makeRandomUser name sentences = Actor.Start(fun actor ->
     let rnd = System.Random()
     let sentencesLength = List.length sentences
 
     let middleAgent = makeMiddleAgent(fun msg ->
-        actor.Post(RndUserMsg.AdminMsg msg))
+        actor.Post(RndUserMsg.UserMsg msg))
 
     let rec msgGenerator() = async {
         do! rnd.Next(4000) |> Async.Sleep
@@ -75,9 +75,9 @@ let makeRandomUser name sentences = Actor.Start(fun actor ->
         let! msg = actor.Receive()
         match msg with
         // Ignore messages from other users
-        | RndUserMsg.AdminMsg (Message _) -> return! messageLoop state
-        | RndUserMsg.AdminMsg AllowEntry -> return! messageLoop InTheRoom
-        | RndUserMsg.AdminMsg Expel -> return! messageLoop OutOfTheRoom
+        | RndUserMsg.UserMsg (Message _) -> return! messageLoop state
+        | RndUserMsg.UserMsg AllowEntry -> return! messageLoop InTheRoom
+        | RndUserMsg.UserMsg Expel -> return! messageLoop OutOfTheRoom
         | RndUserMsg.RandomIntervention _ ->
             match state with
             | InTheRoom ->
@@ -119,7 +119,7 @@ let randomUser2 =
 type [<RequireQualifiedAccess>] HumanMsg =
     | Input of string
     | Output of AsyncReplyChannel<string[]>
-    | AdminMsg of AdminMsg
+    | UserMsg of UserMsg
 
 let makeHumanUser name = Actor.Start(fun actor ->
     let msgs = ResizeArray()
@@ -131,13 +131,13 @@ let makeHumanUser name = Actor.Start(fun actor ->
             let msgsCopy = msgs.ToArray()
             msgs.Clear()
             reply.Reply(msgsCopy)
-        | HumanMsg.AdminMsg(Message(author, txt)) ->
+        | HumanMsg.UserMsg(Message(author, txt)) ->
             sprintf "%-8s> %s" author txt |> msgs.Add
         | _ -> () // Ignore other messages for the human user
         return! messageLoop()
     }
     let middleAgent = makeMiddleAgent(fun msg ->
-        actor.Post(HumanMsg.AdminMsg msg))
+        actor.Post(HumanMsg.UserMsg msg))
     // Put the human user (actually, the middle agent) directly in the room
     admin.Post(Enter(name, middleAgent))
     messageLoop()

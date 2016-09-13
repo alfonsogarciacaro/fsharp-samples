@@ -10,12 +10,12 @@ let actorSystem =
     Configuration.defaultConfig()
     |> System.create "my-system"
 
-type UserMsg =
+type AdminMsg =
   | Talk of author: string * message: string
   | Enter of name: string * IActorRef
   | Leave of name: string
 
-and AdminMsg =
+and UserMsg =
   | Message of author: string * message: string
   | AllowEntry
   | Expel
@@ -41,16 +41,28 @@ let admin = spawn actorSystem "chat-admin" (fun mailbox ->
     }
     messageLoop())
 
+let makeMiddleAgent f name =
+    spawn actorSystem ("middle-agent-"+name) (fun mailbox ->
+        let rec messageLoop() = actor {
+            let! msg = mailbox.Receive()
+            f msg
+            return! messageLoop()
+        }
+        messageLoop())
+
 type UserState = OutOfTheRoom | InTheRoom | WaitingApproval
 
 type [<RequireQualifiedAccess>] RndUserMsg =
     | RandomIntervention
-    | AdminMsg of AdminMsg
+    | UserMsg of UserMsg
 
 let makeRandomUser name sentences =
   spawn actorSystem ("chat-member-"+name) (fun mailbox ->
     let rnd = System.Random()
     let sentencesLength = List.length sentences
+
+    let middleAgent = name |> makeMiddleAgent(fun msg ->
+        mailbox.Self <! RndUserMsg.UserMsg msg)
 
     let rec msgGenerator() = async {
         do! rnd.Next(4000) |> Async.Sleep
@@ -63,9 +75,9 @@ let makeRandomUser name sentences =
         let! msg = mailbox.Receive()
         match msg with
         // Ignore messages from other users
-        | RndUserMsg.AdminMsg (Message _) -> return! messageLoop state
-        | RndUserMsg.AdminMsg AllowEntry -> return! messageLoop InTheRoom
-        | RndUserMsg.AdminMsg Expel -> return! messageLoop OutOfTheRoom
+        | RndUserMsg.UserMsg (Message _) -> return! messageLoop state
+        | RndUserMsg.UserMsg AllowEntry -> return! messageLoop InTheRoom
+        | RndUserMsg.UserMsg Expel -> return! messageLoop OutOfTheRoom
         | RndUserMsg.RandomIntervention _ ->
             match state with
             | InTheRoom ->
@@ -78,7 +90,7 @@ let makeRandomUser name sentences =
                     admin <! Leave name
                     return! messageLoop OutOfTheRoom
             | OutOfTheRoom ->
-                admin <! Enter(name, mailbox.Self)
+                admin <! Enter(name, middleAgent)
                 return! messageLoop WaitingApproval
             | WaitingApproval ->
                 return! messageLoop state // Do nothing, just keep waiting
@@ -107,7 +119,7 @@ let randomUser2 =
 type [<RequireQualifiedAccess>] HumanMsg =
     | Input of string
     | Output
-    | AdminMsg of AdminMsg
+    | UserMsg of UserMsg
 
 let makeHumanUser name =
     spawn actorSystem "chat-member-human" (fun mailbox ->
@@ -119,19 +131,21 @@ let makeHumanUser name =
             | HumanMsg.Output ->
                 let msgsCopy = msgs.ToArray()
                 msgs.Clear()
-                mailbox.Sender() <! msgsCopy
-            | HumanMsg.AdminMsg(Message(author, txt)) ->
+                let sender = mailbox.Sender()
+                sender <! msgsCopy
+            | HumanMsg.UserMsg(Message(author, txt)) ->
                 sprintf "%-8s> %s" author txt |> msgs.Add
             | _ -> () // Ignore other messages for the human user
             return! messageLoop()
         }
-        admin <! Enter(name, mailbox.Self)
+        let middleAgent = name |> makeMiddleAgent(fun msg ->
+            mailbox.Self <! HumanMsg.UserMsg msg)
+        admin <! Enter(name, middleAgent)
         messageLoop()
     )
 
 [<EntryPoint>]
 let main argv =
-    // Get human user name
     printf "Type your name: "
     let name = Console.ReadLine()
     let humanUser = makeHumanUser name
