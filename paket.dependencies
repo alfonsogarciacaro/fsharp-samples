@@ -2,5 +2,5 @@ source https://www.nuget.org/api/v2
 nuget FAKE
 nuget FSharp.Core
 nuget Akka.FSharp
+nuget Akka.Remote
 nuget FSPickler 2.4
-nuget Akkling

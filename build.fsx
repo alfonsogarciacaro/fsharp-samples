@@ -38,10 +38,22 @@ Target "chapter-10/Chat.Akka" (fun _ ->
     runExe projectDir
 )
 
+Target "chapter-10/Akka.Local" (fun _ ->
+    let projectDir = "chapter-10" </> "Akka.Local"
+    buildDebug projectDir
+    runExe projectDir
+)
+
+Target "chapter-10/Akka.Remote" (fun _ ->
+    let projectDir = "chapter-10" </> "Akka.Remote"
+    buildDebug projectDir
+    runExe projectDir
+)
+
 Target "Help" (fun _ ->
     printfn "Pass the chapter and the name of the project to run. Example:"
     printfn "build chapter-10/MailboxProcessor"    
 )
 
 // start build
-RunTargetOrDefault "Build"
+RunTargetOrDefault "Help"
