@@ -7,12 +7,12 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>04c066ab-46bc-4f8c-8d50-c98235534900</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Akka.Remote</RootNamespace>
-    <AssemblyName>Akka.Remote</AssemblyName>
+    <RootNamespace>Chat.Akka.Local</RootNamespace>
+    <AssemblyName>Chat.Akka.Local</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>Akka.Remote</Name>
+    <Name>Chat.Akka.Local</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,7 +42,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Akka.Remote.fs" />
+    <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>
   <PropertyGroup>
