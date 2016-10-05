@@ -1,14 +1,8 @@
-module Chat.Akka
-
 open Akka.Actor
 open Akka.FSharp
 
 open System
 open System.Collections.Generic
-
-let actorSystem =
-    Configuration.defaultConfig()
-    |> System.create "my-system"
 
 type AdminMsg =
   | Talk of author: string * message: string
@@ -19,6 +13,10 @@ and UserMsg =
   | Message of author: string * message: string
   | AllowEntry
   | Expel
+
+let actorSystem =
+    Configuration.defaultConfig()
+    |> System.create "my-system"
 
 let admin = spawn actorSystem "chat-admin" (fun mailbox ->
     let users = Dictionary<string, IActorRef>()
