@@ -38,6 +38,12 @@ Target "chapter-10/Chat.Akka" (fun _ ->
     runExe projectDir
 )
 
+Target "chapter-10/Chat.Akka.Supervision" (fun _ ->
+    let projectDir = "chapter-10" </> "Chat.Akka.Supervision"
+    buildDebug projectDir
+    runExe projectDir
+)
+
 Target "chapter-10/Chat.Akka.Local" (fun _ ->
     let projectDir = "chapter-10" </> "Chat.Akka.Local"
     buildDebug projectDir

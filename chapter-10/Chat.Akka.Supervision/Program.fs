@@ -4,6 +4,21 @@ open Akka.FSharp
 open System
 open System.Collections.Generic
 
+let sarahSentences = [
+        "Hi everybody!"
+        "It feels great to be here!"
+        "I missed you all so much!"
+        "I couldn't agree more with that."
+        "Oh, just look at the time! I should be leaving..."
+    ]
+
+let johnSentences = [
+        "Hmm, I didn't expect YOU to be here."
+        "I must say, I don't feel very comfortable."
+        "Is this room always so boring?"
+        "I shouldn't be losing my time here."
+    ]
+
 type AdminMsg =
   | Talk of author: string * message: string
   | Enter of name: string * IActorRef
@@ -43,37 +58,37 @@ type UserState = OutOfTheRoom | InTheRoom | WaitingApproval
 
 type RandomIntervention = RandomIntervention
 
-let makeRandomUser name sentences =
-  spawn actorSystem ("chat-member-"+name) (fun mailbox ->
+// Define a custom exception that will be thrown by random users.
+// F# exceptions are easier to declare and can be pattern matched. 
+exception UserException of name: string
+
+let makeRandomUser supervisor name sentences =
+  spawn supervisor ("chat-member-"+name) (fun mailbox ->
     let rnd = System.Random()
     let sentencesLength = List.length sentences
-
     let rec msgGenerator() = async {
         do! rnd.Next(4000) |> Async.Sleep
         mailbox.Self <! RandomIntervention
         return! msgGenerator()
     }
     msgGenerator() |> Async.Start
-
     let rec messageLoop (state: UserState) = actor {
         let! msg = mailbox.Receive()
-        // As the message is untyped, we have to do
-        // some type testing first.
         match msg: obj with
         | :? UserMsg as msg ->
             match msg with
-            // Ignore messages from other users
             | Message _ -> return! messageLoop state
             | AllowEntry -> return! messageLoop InTheRoom
             | Expel -> return! messageLoop OutOfTheRoom
         | :? RandomIntervention ->
             match state with
             | InTheRoom ->
-                // Pick a random sentence or leave the room
-                match rnd.Next(sentencesLength + 1) with
+                match rnd.Next(sentencesLength + 2) with
                 | i when i < sentencesLength ->
                     admin <! Talk(name, sentences.[i])
                     return! messageLoop state
+                | i when i = sentencesLength ->
+                    UserException name |> raise // Throw the exception
                 | _ ->
                     admin <! Leave name
                     return! messageLoop OutOfTheRoom
@@ -81,29 +96,31 @@ let makeRandomUser name sentences =
                 admin <! Enter(name, mailbox.Self)
                 return! messageLoop WaitingApproval
             | WaitingApproval ->
-                return! messageLoop state // Do nothing, just keep waiting
+                return! messageLoop state
         | _ -> ()
     }
-    // Start the loop with initial state
     messageLoop OutOfTheRoom
 )
 
-let randomUser1 =
-    makeRandomUser "Sarah" [
-        "Hi everybody!"
-        "It feels great to be here!"
-        "I missed you all so much!"
-        "I couldn't agree more with that."
-        "Oh, just look at the time! I should be leaving..."
-    ]
-
-let randomUser2 =
-    makeRandomUser "John" [
-        "Hmm, I didn't expect YOU to be here."
-        "I must say, I don't feel very comfortable."
-        "Is this room always so boring?"
-        "I shouldn't be losing my time here."
-    ]
+let randomUserSupervisor =
+    spawnOpt actorSystem "random-user-supervisor"
+        <| fun mailbox ->
+            let randomUser1 = makeRandomUser mailbox "Sarah" sarahSentences
+            let randomUser2 = makeRandomUser mailbox "John" johnSentences
+            let rec messageLoop() = actor {
+                let! msg = mailbox.Receive()
+                // Do nothing as this supervisor won't receive messages.
+                // In the case we need to forward the message to a child,
+                // we can use Forward, as in `randomUser1.Forward(msg)` 
+                return! messageLoop()
+            }
+            messageLoop()
+        <| [ SupervisorStrategy(
+                Strategy.OneForOne(function
+                | UserException name ->
+                    printfn "Resuming %s..." name
+                    Directive.Resume
+                | _ -> Directive.Escalate)) ]
 
 type HumanMsg =
     | Input of string
