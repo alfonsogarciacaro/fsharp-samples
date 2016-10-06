@@ -3,18 +3,7 @@
 open Akka.FSharp
 open Akka.Actor
 
-let config =  
-    Configuration.parse
-        @"akka {
-            actor.provider = ""Akka.Remote.RemoteActorRefProvider, Akka.Remote""
-            remote.helios.tcp {
-                transport-protocol = tcp
-                hostname = localhost
-                port = 9001
-            }
-        }"
-
-// create remote deployment configuration for actor system available under `actorPath`
+// Create remote deployment configuration from the system address
 let remoteDeploy systemPath = 
     let address = 
         match ActorPath.TryParseAddress systemPath with
@@ -22,61 +11,70 @@ let remoteDeploy systemPath =
         | true, a -> a
     Deploy(RemoteScope(address))
 
+// When testing remotely, write the IP of **this system** instead of `localhost`
+let config = Configuration.parse """
+akka {
+    actor {
+        provider = "Akka.Remote.RemoteActorRefProvider, Akka.Remote"
+    }    
+    remote.helios.tcp {
+        transport-protocol = tcp
+        hostname = localhost
+        port = 9001
+    }
+}
+"""
+
+// When testing remotely, write the IP of **the remote system** instead of `localhost`
+let [<Literal>] remoteSystemAddress = "akka.tcp://remote-system@localhost:7000"
+
+// These literal tags allow some level of safety
+// while keeping the messages serializable
 module Msg =
     let [<Literal>] Talk = "Talk"
     let [<Literal>] Enter = "Enter"
     let [<Literal>] Input = "Input"
-    let [<Literal>] Message = "Message"
-
-open FSharp.Reflection
 
 let makeHumanUser system (name: string) =
-    let remoteSystemAddress = "akka.tcp://remote-system@localhost:7000"
     spawne system "chat-member-human-remote"
         <@
+            // Use this operator to make value boxing less verbose
             let (!) (x:obj) = box x
             fun mailbox ->
                 let admin =
-                    sprintf "%s/user/chat-admin" remoteSystemAddress
-                    |> select <| mailbox.Context.System
-                let rec messageLoop listen: Cont<string*obj list, unit> = actor {
+                    // Select the admin actor by its path 
+                    let path = remoteSystemAddress + "/user/chat-admin"
+                    select path mailbox.Context.System
+                let rec messageLoop(): Cont<string*obj list, unit> = actor {
                     let! msg = mailbox.Receive()
-                    let listen =
-                        match msg with
-                        // | Msg.Message, [author; txt] when listen ->
-                        //     printfn "%-8O> %O" author txt
-                        //     listen
-                        | Msg.Input, [txt] when listen ->
-                            admin <! (Msg.Talk, [!name; !txt])
-                            true
-                        | _ -> listen
-                    return! messageLoop listen
+                    match msg with
+                    | Msg.Input, [txt] ->
+                        // The message is just a tuple of a string and
+                        // a list of serializable objects, which can be
+                        // sent over the network without sharing any assembly.
+                        admin <! (Msg.Talk, [!name; !txt])
+                    | _ -> ()
+                    return! messageLoop()
                 }
                 admin <! (Msg.Enter, [!name; !mailbox.Self])
-                messageLoop true
-        @> [ SpawnOption.Deploy(remoteDeploy remoteSystemAddress) ]
+                messageLoop()
+        @>
+        // Serialize the code and deploy the actor in the remote system 
+        [ SpawnOption.Deploy(remoteDeploy remoteSystemAddress) ]
 
 [<EntryPoint>]
-let main _args =
-    let system = System.create "local-system" config
+let main _ =
+    use system = System.create "local-system" config
     printf "Type your name: "
     let name = System.Console.ReadLine()
     let humanUser = makeHumanUser system name 
-
     let rec consoleLoop(): Async<unit> = async {
         printf "> "
         let txt = System.Console.ReadLine()
         if System.String.IsNullOrWhiteSpace(txt) |> not then
             humanUser <! ("Input", [box txt])
-        // Wait a bit to receive your own messafe from the admin
-        // do! Async.Sleep 200
-        // // Get the messages stored by the humanUser actor
-        // let! msgs = localHumanUser <? HumanMsg.Output
-        // msgs |> Array.iter (printfn "%s")
         return! consoleLoop()
     }
-    printfn "Type a message to send it to the chat and read others' interventions."
-    printfn @"Leave the line blank to ""pass your turn""."
+    printfn "Type a message to send it to the chat."
     consoleLoop() |> Async.RunSynchronously
-
     0
