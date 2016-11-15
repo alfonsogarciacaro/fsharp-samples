@@ -1,6 +1,15 @@
 source https://www.nuget.org/api/v2
 nuget FAKE
 nuget FSharp.Core
+nuget Suave
+nuget Suave.DotLiquid
+nuget Suave.Experimental
+nuget NUnit
+nuget Foq
+nuget FsUnit
+nuget FsCheck
+nuget Selenium.WebDriver
+nuget canopy
 nuget Akka.FSharp
 nuget Akka.Remote
 nuget FSPickler 2.4

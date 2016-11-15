@@ -14,7 +14,7 @@ let runExe projectDir =
     let projectName = Path.GetFileName(projectDir)
     let exePath = buildDir </> projectDir </> projectName + ".exe"
     ProcessHelper.directExec (fun info ->
-        if EnvironmentHelper.isLinux        
+        if EnvironmentHelper.isLinux
         then info.FileName <- "mono"; info.Arguments <- exePath
         else info.FileName <- exePath)
     |> ignore
@@ -25,6 +25,29 @@ let buildDebug projectDir =
     CleanDir buildDir
     MSBuildDebug buildDir "Build" [projectDir </> projectName + ".fsproj"]
     |> ignore
+
+Target "CompileAndRunTests" (fun _ ->
+    // Clean and create build directory if it doesn't exist
+    let buildDir = "build/tests"
+    CleanDir buildDir
+    CreateDir buildDir
+
+    // COMPILE TESTS
+    ["tests/MyLibTests.fsx"]
+    |> FscHelper.compile [
+        // F# compiler options
+        FscHelper.Out (buildDir </> "MyLibTests.dll")
+        FscHelper.Target FscHelper.TargetType.Library
+    ]
+    // Raise exception if a code other than 0 is returned
+    |> function 0 -> () | c -> failwithf "F# compiler return code: %i" c
+    // Copy the NUnit assembly to the build directory
+    FileUtils.cp "packages/NUnit/lib/net45/nunit.framework.dll" buildDir
+
+    // RUN TESTS
+    [buildDir </> "MyLibTests.dll"]
+    |> Testing.NUnit3.NUnit3 (fun p -> p) // Use default parameters
+)
 
 Target "chapter-10/Chat.MailboxProcessor" (fun _ ->
     let projectDir = "chapter-10" </> "Chat.MailboxProcessor"
@@ -58,7 +81,7 @@ Target "chapter-10/Chat.Akka.Remote" (fun _ ->
 
 Target "Help" (fun _ ->
     printfn "Pass the chapter and the name of the project to run. Example:"
-    printfn "build chapter-10/MailboxProcessor"    
+    printfn "build chapter-10/MailboxProcessor"
 )
 
 // start build
