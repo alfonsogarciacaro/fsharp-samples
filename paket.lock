@@ -21,7 +21,13 @@ NUGET
     Foq (1.7.1)
     FsCheck (2.6.2)
       FSharp.Core (>= 3.1.2.5)
+    FSharp.Charting (0.90.14)
+    FSharp.Charting.Gtk (0.90.14)
     FSharp.Core (4.0.0.1)
+    FSharp.Data (2.3.2)
+      Zlib.Portable (>= 1.11) - framework: >= netstandard11, portable-net45+sl5+win8, portable-net45+win8, portable-net45+win8+wp8+wpa81
+    FSharp.Data.TypeProviders (5.0.0.2)
+      FSharp.Core (>= 3.1.2.5)
     FsPickler (2.4)
     FSPowerPack.Core.Community (3.0)
     FSPowerPack.Linq.Community (3.0)
@@ -288,3 +294,4 @@ NUGET
       System.Text.Encoding (>= 4.0.11) - framework: dnxcore50, >= netstandard13
       System.Threading (>= 4.0.11) - framework: dnxcore50, >= netstandard13
       System.Xml.ReaderWriter (>= 4.0.11) - framework: dnxcore50, netstandard10, >= netstandard13
+    Zlib.Portable (1.11) - framework: >= netstandard11, portable-net45+sl5+win8, portable-net45+win8, portable-net45+win8+wp8+wpa81
