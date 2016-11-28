@@ -1,3 +1,5 @@
+#r "../packages/NUnit/lib/net45/nunit.framework.dll"
+#r "../packages/FsCheck/lib/net45/FsCheck.dll"
 #load "MyLib.fs"
 
 open MyLib
@@ -13,10 +15,6 @@ let addIsAssociative x y z =
 
 let addHasIdentity x =
     add x 0 = x
-
-#r "../packages/NUnit/lib/net45/nunit.framework.dll"
-#r "../packages/FsCheck/lib/net45/FsCheck.dll"
-#load "MyLib.fs"
 
 open MyLib
 open FsCheck

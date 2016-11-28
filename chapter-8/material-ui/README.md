@@ -1,4 +1,4 @@
-INSTRUCTIONS
+# INSTRUCTIONS
 
 Dependencies are in the root folder, make sure you have
 run `npm install` there.

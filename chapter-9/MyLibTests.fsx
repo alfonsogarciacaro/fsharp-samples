@@ -54,28 +54,9 @@ let cleanup() =
 let oneTimeCleanup() =
     printfn "This cleanup happens only once"
 
-
-// Helper to make assertions more idiomatic in F#
-
-let equals expected actual =
-    Assert.AreEqual(expected, actual)
-
-let ``Adding two plus two yields four``() =
-    add 2 2
-    |> equals 4
-
-// Using helpers from FsUnit
-
-#r "../packages/FsUnit/lib/net45/FsUnit.NUnit.dll"
-open FsUnit
-
-4.99 |> should (equalWithin 0.05) 5.0
-4.0 |> should not' ((equalWithin 0.05) 5.0)
-7 |> should greaterThan 3
-7 |> should greaterThanOrEqualTo 3
-
 // Asynchronous tests
 
+open System
 type Message = string * AsyncReplyChannel<string>
 
 [<Test>]
@@ -84,14 +65,17 @@ let ``MailboxProcessor.postAndAsyncReply works``() =
         let formatString = "Msg: {0} - {1}"
         let agent = MailboxProcessor<Message>.Start(fun inbox ->
             let rec loop n = async {
-                let! (message, replyChannel) = inbox.Receive()
+                let! (msg, channel) = inbox.Receive()
                 do! Async.Sleep(100) // Delay a bit
-                replyChannel.Reply(String.Format(formatString, n, message))
-                if message <> "Bye" then do! loop (n + 1)
+                channel.Reply <|
+                    String.Format(formatString, n, msg)
+                if msg <> "Bye" then
+                    do! loop (n + 1)
             }
             loop 0)
-        let! resp = agent.PostAndAsyncReply(fun replyChannel -> "Hi", replyChannel)
-        equal "Msg: 0 - Hi" resp
-        let! resp = agent.PostAndAsyncReply(fun replyChannel -> "Bye", replyChannel)
-        equal "Msg: 1 - Bye" resp
-    } |> Async.RunSynchronously
+        let! resp = agent.PostAndAsyncReply(fun ch -> "Hi", ch)
+        Assert.AreEqual("Msg: 0 - Hi", resp)
+        let! resp = agent.PostAndAsyncReply(fun ch -> "Bye", ch)
+        Assert.AreEqual("Msg: 1 - Bye", resp)
+    }
+    |> Async.RunSynchronously

@@ -1,4 +1,6 @@
 #r "../packages/Suave/lib/net40/Suave.dll"
+#r "../packages/DotLiquid/lib/net451/DotLiquid.dll"
+#r "../packages/Suave.DotLiquid/lib/net40/Suave.DotLiquid.dll"
 
 open Suave
 open Suave.Filters
@@ -12,9 +14,6 @@ let greet area (reqParams: (string * (string option)) list) =
     |> sprintf "Hello from %s, %s!" area
 
 // Templating with DotLiquid (see "template.html")
-
-#r "../packages/DotLiquid/lib/NET40/DotLiquid.dll"
-#r "../packages/Suave.DotLiquid/lib/net40/Suave.DotLiquid.dll"
 
 type Teacher = {
     Name: string

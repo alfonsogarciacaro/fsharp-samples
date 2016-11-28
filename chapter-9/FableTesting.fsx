@@ -1,10 +1,9 @@
 #r "../node_modules/fable-core/Fable.Core.dll"
+#r "../packages/NUnit/lib/net45/nunit.framework.dll"
 
 open System
 open Fable.Core
 open Fable.Import
-
-#r "../packages/NUnit/lib/net45/nunit.framework.dll"
 open NUnit.Framework
 
 // If you don’t want to add the NUnit dependency

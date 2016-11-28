@@ -6,9 +6,11 @@ nuget FSharp.Data.TypeProviders
 nuget FSharp.Charting
 nuget FSharp.Charting.Gtk
 nuget Suave
+nuget DotLiquid
 nuget Suave.DotLiquid
 nuget Suave.Experimental
 nuget NUnit
+nuget NUnit.ConsoleRunner
 nuget Foq
 nuget FsUnit
 nuget FsCheck

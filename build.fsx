@@ -1,4 +1,4 @@
-// include Fake libs
+// Include Fake lib
 #r "./packages/FAKE/tools/FakeLib.dll"
 
 open Fake
@@ -33,7 +33,7 @@ Target "CompileAndRunTests" (fun _ ->
     CreateDir buildDir
 
     // COMPILE TESTS
-    ["tests/MyLibTests.fsx"]
+    ["chapter-9/MyLibTests.fsx"]
     |> FscHelper.compile [
         // F# compiler options
         FscHelper.Out (buildDir </> "MyLibTests.dll")
@@ -46,7 +46,8 @@ Target "CompileAndRunTests" (fun _ ->
 
     // RUN TESTS
     [buildDir </> "MyLibTests.dll"]
-    |> Testing.NUnit3.NUnit3 (fun p -> p) // Use default parameters
+    |> Testing.NUnit3.NUnit3 (fun p ->
+        {p with ToolPath="./packages/NUnit.ConsoleRunner/tools/nunit3-console.exe"})
 )
 
 Target "chapter-10/Chat.MailboxProcessor" (fun _ ->

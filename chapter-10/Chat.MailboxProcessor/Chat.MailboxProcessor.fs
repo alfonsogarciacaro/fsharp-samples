@@ -18,7 +18,7 @@ and UserMsg =
 let admin = Actor<AdminMsg>.Start(fun actor ->
   // Keep the list of users in the chat room
   let users = Dictionary<string, Actor<UserMsg>>()
-  // ...and use a function helper to post a message to all of them 
+  // ...and use a function helper to post a message to all of them
   let post msg = for u in users.Values do u.Post(msg)
 
   // Use an asynchronous recursive to represent the non-blocking loop
@@ -36,8 +36,8 @@ let admin = Actor<AdminMsg>.Start(fun actor ->
               post <| Message("Admin", sprintf "User %s left the room" name)
       | Talk(author, txt) ->
           post <| Message(author, txt)
-      
-      return! messageLoop() // Loop to top 
+
+      return! messageLoop() // Loop to top
     }
 
   messageLoop() // Fire up the loop

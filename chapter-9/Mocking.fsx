@@ -1,4 +1,5 @@
 #r "../packages/NUnit/lib/net45/nunit.framework.dll"
+#r "../packages/Foq/lib/net45/Foq.dll"
 #load "MyLib.fs"
 
 open MyLib
@@ -9,7 +10,6 @@ let createCustomer name =
         member __.Name = name
         member __.HasBoughtItem(_) = failwith "Not implemented" }
 
-#r "../packages/Foq/lib/net45/Foq.dll"
 open Foq
 
 let createCustomer2 (name: string) =
